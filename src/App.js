@@ -1,4 +1,3 @@
-import "./App.css";
 import axios from "axios";
 import { Table } from "./components/Table";
 import { font } from "./font/font";

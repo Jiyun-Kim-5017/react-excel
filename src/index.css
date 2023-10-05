@@ -10,18 +10,27 @@ body {
 
 table {
 	border-collapse: collapse;
+	/* border-spacing: 0; */
+	border-radius: 5px;
+	border: hidden;
+	overflow: hidden;
+	box-shadow: 0 0 0 1px #e6e6e6;
 }
 
 td,
 th {
-	padding: 3px;
-}
-
-td {
-	border: 0.3px solid #cccccc;
+	padding: 5px;
+	border: 1.5px solid #e6e6e6;
 }
 
 th {
-	background-color: #e5f6ff;
-	border: 1px solid #000;
+	background-color: #f0f4f9;
+}
+
+thead tr th {
+	border-bottom: none !important;
+}
+
+tbody tr:first-child td {
+	border-top: none !important;
 }
