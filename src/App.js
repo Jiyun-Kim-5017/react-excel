@@ -1,35 +1,26 @@
 import "./App.css";
-import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
-// const ExcelJS = require("exceljs");
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import axios from "axios";
+import { Table } from "./Table";
+import { font } from "./font";
 
-const list = [
-	{
-		CNM: "KMHB5516BPW069503",
-		car: "캐스퍼",
-		date: "2023-05-01",
-	},
-	{
-		CNM: "KMHB5516BPW123403",
-		car: "아반떼",
-		date: "2023-05-17",
-	},
-	{
-		CNM: "HKMB5516BPW069503",
-		car: "제네시스",
-		date: "2023-05-28",
-	},
-	{
-		CNM: "NNNB5516BPW069503",
-		car: "볼보",
-		date: "2023-06-12",
-	},
-];
+const data = await axios.get("http://localhost:5000/data").then((res) => {
+	return res.data;
+});
 
 // TH
-const headers = ["차대번호", "차종", "날짜"];
+const headers = [
+	"국교부 수신일",
+	"시도 수신일",
+	"등록일시",
+	"행정동코드",
+	"차번호",
+	"주민번호",
+];
 // TH width, 단위는 엑셀의 너비 기준
-const headerWidths = [30, 16, 18];
+const headerWidths = [16, 16, 16, 16, 16, 16];
 
 const styleHeaderCell = (cell) => {
 	cell.fill = {
@@ -76,70 +67,97 @@ const styleDataCell = (cell) => {
 	};
 };
 
-function App() {
-	const downloadList = async (rows) => {
-		try {
-			//console.log(rows);
+const downloadList = async (rows) => {
+	try {
+		// workbook 생성
+		const workbook = new ExcelJS.Workbook();
+		// sheet 생성
+		const sheet = workbook.addWorksheet("엑셀");
 
-			// workbook 생성
-			const workbook = new ExcelJS.Workbook();
-			// sheet 생성
-			const sheet = workbook.addWorksheet("엑셀");
+		// 상단 헤더(TH) 추가
+		const headerRow = sheet.addRow(headers);
+		// 헤더의 높이값 지정
+		headerRow.height = 30.75;
+		// 각 헤더 cell에 스타일 지정
+		headerRow.eachCell((cell, colNum) => {
+			styleHeaderCell(cell);
+			sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+		});
+		console.log(rows);
+		// 각 Data cell에 데이터 삽입 및 스타일 지정
+		rows.forEach((data) => {
+			const appendRow = sheet.addRow(Object.values(data));
 
-			// 상단 헤더(TH) 추가
-			const headerRow = sheet.addRow(headers);
-			// 헤더의 높이값 지정
-			headerRow.height = 30.75;
-			// 각 헤더 cell에 스타일 지정
-			headerRow.eachCell((cell, colNum) => {
-				styleHeaderCell(cell);
-				sheet.getColumn(colNum).width = headerWidths[colNum - 1];
+			appendRow.eachCell((cell, colNum) => {
+				styleDataCell(cell, colNum);
+				if (colNum === 1) {
+					cell.font = {
+						color: { argb: "ff1890ff" },
+					};
+				}
+				// if (colNum === 3) {
+				// 	cell.numFmt = "0,000";
+				// }
 			});
+		});
 
-			// 각 Data cell에 데이터 삽입 및 스타일 지정
-			rows.forEach(({ CNM, car, date }) => {
-				const rowDatas = [CNM, car, date];
-				const appendRow = sheet.addRow(rowDatas);
-
-				appendRow.eachCell((cell, colNum) => {
-					styleDataCell(cell, colNum);
-					if (colNum === 1) {
-						cell.font = {
-							color: { argb: "ff1890ff" },
-						};
-					}
-					// if (colNum === 3) {
-					// 	cell.numFmt = "0,000";
-					// }
-				});
-			});
-
-			// 파일 생성
-			const fileData = await workbook.xlsx.writeBuffer(); //writeBuffer는 프로미스를 반환하므로 async-await을 사용해야 한다.
-			const blob = new Blob([fileData], {
+		// 파일 생성
+		workbook.xlsx.writeBuffer().then((data) => {
+			const blob = new Blob([data], {
 				type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 			});
-			saveAs(blob, `엑셀`);
-		} catch (error) {
-			console.log(error);
-		}
-	};
+			const url = window.URL.createObjectURL(blob);
+			const anchor = document.createElement("a");
+			anchor.href = url;
+			anchor.download = `엑셀.xlsx`;
+			anchor.click();
+			window.URL.revokeObjectURL(url);
+		});
+	} catch (error) {
+		console.log(error);
+	}
+};
 
+const downloadPDF = (font) => {
+	console.log(font);
+	const doc = new jsPDF("p", "mm", "a4");
+
+	doc.addFileToVFS("malgun.ttf", font);
+	doc.addFont("malgun.ttf", "malgun", "normal");
+	doc.setFont("malgun");
+
+	doc.line(15, 19, 195, 19);
+
+	autoTable(doc, {
+		theme: "plain",
+		margin: { top: 30 },
+		styles: { font: "malgun" },
+		headStyles: {
+			halign: "center",
+			valign: "middle",
+			fillColor: [234, 234, 234],
+			lineColor: [200, 200, 200],
+			lineWidth: 0.1,
+		},
+		bodyStyles: {
+			lineColor: [200, 200, 200],
+			lineWidth: 0.1,
+		},
+		html: "#dataTable",
+	});
+
+	doc.save("table.pdf");
+};
+
+function App() {
 	return (
-		<div className="App">
-			<button
-				onClick={() => downloadList(list)}
-				style={{
-					padding: "4px 8px",
-					background: "#0f8107",
-					fontSize: "1.5em",
-					color: "#fff",
-					border: 0,
-					cursor: "pointer",
-				}}>
-				엑셀
-			</button>
-		</div>
+		<>
+			<div className="App">
+				<Table data={data} />
+				<button onClick={() => downloadList(data)}>엑셀</button>
+				<button onClick={() => downloadPDF(font)}>PDF</button>
+			</div>
+		</>
 	);
 }
 
