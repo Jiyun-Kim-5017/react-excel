@@ -62,7 +62,9 @@ export const downloadEXCEL = async (rows) => {
 		// workbook 생성
 		const workbook = new ExcelJS.Workbook();
 		// sheet 생성
-		const sheet = workbook.addWorksheet("엑셀");
+		const sheet = workbook.addWorksheet("EXCEL", {
+			views: [{ state: "frozen", ySplit: 1 }], //첫 행 고정
+		});
 
 		// 상단 헤더(TH) 추가
 		const headerRow = sheet.addRow(headers);
@@ -99,7 +101,7 @@ export const downloadEXCEL = async (rows) => {
 			const url = window.URL.createObjectURL(blob);
 			const anchor = document.createElement("a");
 			anchor.href = url;
-			anchor.download = `엑셀.xlsx`;
+			anchor.download = "EXCEL.xlsx";
 			anchor.click();
 			window.URL.revokeObjectURL(url);
 		});

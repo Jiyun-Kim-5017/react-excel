@@ -10,9 +10,26 @@ export const downloadPDF = (font) => {
 
 	doc.line(15, 19, 195, 19);
 
+	const addFooters = (doc) => {
+		const pageCount = doc.internal.getNumberOfPages();
+		doc.setFontSize(8);
+		for (var i = 1; i <= pageCount; i++) {
+			doc.setPage(i);
+			doc.text(
+				`${i} / ${pageCount}`,
+				doc.internal.pageSize.width / 2, //가로 위치
+				287, //세로 위치
+				{
+					align: "center",
+				}
+			);
+		}
+	};
+
 	autoTable(doc, {
 		theme: "plain",
-		margin: { top: 30 },
+		startY: 30,
+		margin: { bottom: 30 },
 		styles: { font: "malgun" },
 		headStyles: {
 			halign: "center",
@@ -28,5 +45,6 @@ export const downloadPDF = (font) => {
 		html: "#dataTable",
 	});
 
-	doc.save("table.pdf");
+	addFooters(doc);
+	doc.save("PDF.pdf");
 };
