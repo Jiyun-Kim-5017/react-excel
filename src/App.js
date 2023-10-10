@@ -1,22 +1,17 @@
-import axios from "axios";
-import { Table } from "./components/Table";
-import { font } from "./font/font";
-import { downloadEXCEL } from "./functions/downloadEXCEL";
-import { downloadPDF } from "./functions/downloadPDF";
-
-const data = await axios.get("http://localhost:5000/data").then((res) => {
-	return res.data;
-});
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Files } from "../src/pages/Files/Files";
+import { Home } from "../src/pages/Home/Home";
 
 function App() {
 	return (
-		<>
+		<BrowserRouter>
 			<div className="App">
-				<Table data={data} />
-				<button onClick={() => downloadEXCEL(data)}>엑셀</button>
-				<button onClick={() => downloadPDF(font)}>PDF</button>
+				<Routes>
+					<Route path="" element={<Home />} />
+					<Route path="/files" element={<Files />} />
+				</Routes>
 			</div>
-		</>
+		</BrowserRouter>
 	);
 }
 
